@@ -1,0 +1,47 @@
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{graphics}
+%\usepackage{enumerate}
+\usepackage{natbib}
+\usepackage{url} % not crucial - just used below for the URL 
+\usepackage{amsfonts,amsthm,amsmath,amsthm}
+\usepackage{hyperref,natbib}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{bm}
+\usepackage{autobreak}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+
+\title
+{DR kernel with Additive Tail}
+\author{Nathan B. R. Wycoff}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+In this repository we will study stationary kernels on $\mathbb{R}^P, P < \infty$, of the form, given a subspace $\mathcal{U} \subseteq \mathbb{R}^P$ of dimension $R$ and a basis for the rest of the space generating one dimensional subspaces $\mathcal{V}_i, i \in \{R+1, \ldots, P\}$:
+
+\begin{equation}
+	k(\mathbf{d}) = \gamma_0 e^{-\frac{1}{2}\mathbf{d}^\top \mathbf{P}_{\mathcal{U}} \mathbf{D}_l^{-1} \mathbf{P}_{\mathcal{U}}^\top\mathbf{d}} + \sum_{p=R+1}^P \gamma_{p}e^{-\frac{1}{2l_p}\mathbf{d}^\top \mathbf{P}_{\mathcal{V}_i}\mathbf{d}}
+\end{equation}
+
+here $\mathbf{d}$ denotes the displacement vector between two locations, $\mathbf{P}_{\mathcal{U}}$ gives the self-adjoint projection operator onto $\mathcal{U}$, and $\mathbf{D}_l$ is a diagonal matrix containing lengthscales.
+
+Intuitively, the idea is that the kernel gives ``full attention" to the subspace $\mathcal{U}$ while still taking the rest of the space into account. 
+
+Unfortunately, the basis chosen for the rest of the space is important, and will give different results. How to choose this basis is not yet clear to me, so I will do so randomly for now.
+
+\section{Experiments}
+
+\subsection{Low Rank Quadratic}
+
+Here we will study the performance of the method with a fixed sample size on a quadratic function $f(\mathbf{x}) = \mathbf{x}^\top\mathbf{A}\mathbf{x}$ where $\textrm{rank}(\mathbf{A}) = R$.
+
+
+
+\end{document}
