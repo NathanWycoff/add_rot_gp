@@ -12,10 +12,12 @@ k <- function(d, U, Vs, l, gamma) {
     #Pu <- tcrossprod(U)
     R <- ncol(U)
     Pvs <- lapply(Vs, tcrossprod)
-    corr <- gamma[1] * exp(-0.5 * t(d) %*% U %*% diag(1/l[1:R]) %*% t(U) %*% d)
+    #corr <- gamma[1] * exp(-0.5 * t(d) %*% U %*% diag(1/l[1:R]) %*% t(U) %*% d)
+    corr <- gamma[1] * exp(-0.5 * sum((t(d) %*% U %*% diag(1/sqrt(l[1:R]))))^2)
     if (R < P) {
         for (p in (R+1):P) {
-            corr <- corr + gamma[p-R+1] * exp(-0.5 * t(d) %*% Pvs[[p-R]] %*% d / l[p])
+            #corr <- corr + gamma[p-R+1] * exp(-0.5 * t(d) %*% Pvs[[p-R]] %*% d / l[p])
+            corr <- corr + gamma[p-R+1] * exp(-0.5 * sum((t(d) %*% Vs[[p-R]])^2))
         }
     }
     return(corr)
@@ -44,6 +46,28 @@ nll <- function(y, X, U, Vs, l, gamma, g = 1e-6) {
 
     # Evaluate loglik
     return(-dmvnorm(y, rep(0, N),  K, log = T))
+}
+
+par_2_param <- function(par) {
+    # Form parameters
+    L <- matrix(par[1:(R*P)], nrow = P)
+    l <- par[(R*P+1):(R*P + P)]
+    gamma <- par[(R*P+P+1):(R*P+P+P-R+1)]
+
+    # Build orthonormal basis.
+    B <- qr.Q(qr(cbind(L, matrix(rnorm((P-R)*P), nrow = P))))
+    U <- B[,1:R]
+    if (R < P) {
+        Vs <- lapply((R+1):P, function(p) B[,p])
+    } else {
+        Vs <- NULL
+    }
+
+    return(list(U = U, Vs = Vs, l = l, gamma = gamma))
+}
+
+param_2_par <- function(U, l, gamma) {
+    return(c(as.numeric(U), l, gamma))
 }
 
 #' A wrapper of the negative loglikelihood for use by optim
