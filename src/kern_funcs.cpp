@@ -15,7 +15,10 @@ double fast_k_cpp(NumericVector d, NumericVector gamma, int R, bool has_tail) {
     for (int r = 0; r < R; r++) {
         as_sum += d(r)*d(r);
     }
-    corr = gamma(0) * exp(-0.5 * as_sum);
+
+    if (R > 0) {
+        corr += gamma(0) * exp(-0.5 * as_sum);
+    }
     if (has_tail && R < P) {
         for (int p = R; p < P; p++) {
             corr += gamma(p-R+1) * exp(-0.5 * d(p)*d(p));

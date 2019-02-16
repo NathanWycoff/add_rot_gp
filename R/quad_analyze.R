@@ -3,19 +3,19 @@
 
 require(ggplot2)
 
-load("data/sims/quadratic1548914553.61066.RData")
+load("data/sims/quadratic1550158396.01742.RData")
 
 sets <- length(results)
 titles <- c("Effort", "NLL", "InSample_Error", "OoS_Error", "Subspace_Error")
-results[[1]][[1]]
 for (set in 1:sets) {
+    pdf(paste("images/quadsim_", Ps[set], ".pdf", sep = ""), width = 10, height = 10)
+    par(mfrow=c(3,2))
     for (r in 1:length(titles)) {
-        pdf(paste("images/quadsim_", Ps[set], "_", titles[r], ".pdf", sep = ""))
         if (r > 2) {
             boxplot(log(results[[set]][[r]]), main = titles[r])
         } else {
             boxplot(results[[set]][[r]], main = titles[r])
         }
-        dev.off()
     }
+    dev.off()
 }

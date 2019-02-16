@@ -9,14 +9,24 @@
 #' @param gamma The covariance or scaling factors for each component of the sum; should be of length P - R + 1. 
 #' @param has_tail Do we include the additive tail?
 k <- function(d, U, Vs, l, gamma, has_tail = TRUE) {
-    R <- ncol(U)
+    if (is.null(dim(U))) {
+        R <- 0
+    } else {
+        R <- ncol(U)
+    }
     Pvs <- lapply(Vs, tcrossprod)
+    corr <- 0
     #corr <- gamma[1] * exp(-0.5 * t(d) %*% U %*% diag(1/l[1:R]) %*% t(U) %*% d)
-    corr <- gamma[1] * exp(-0.5 * sum((t(d) %*% U %*% diag(1/sqrt(l[1:R]), nrow = R))^2))
+    if (R > 0) {
+        corr <- corr + gamma[1] * exp(-0.5 * sum((t(d) %*% U %*% diag(1/sqrt(l[1:R]), nrow = R))^2))
+    }
     if (R < P) {
         if (has_tail) {
             for (p in (R+1):P) {
                 #corr <- corr + gamma[p-R+1] * exp(-0.5 * t(d) %*% Pvs[[p-R]] %*% d / l[p])
+                #print(p)
+                #print(p-R)
+                #print(Vs)
                 corr <- corr + gamma[p-R+1] * exp(-0.5 * sum((t(d) %*% Vs[[p-R]])^2) / l[p])
             }
         }
@@ -29,7 +39,10 @@ k <- function(d, U, Vs, l, gamma, has_tail = TRUE) {
 #' @param gamma The covariance or scaling factors for each component of the sum; should be of length P - R + 1
 fast_k <- function(d, gamma, R, has_tail = TRUE) {
     P <- length(d)
-    corr <- gamma[1] * exp(-0.5 * sum(d[1:R]^2))
+    corr <- 0
+    if (R > 0) {
+    corr <- corr + gamma[1] * exp(-0.5 * sum(d[1:R]^2))
+    }
     if (has_tail && R < P) {
         for (p in (R+1):P) {
             corr <- corr + gamma[p-R+1] * exp(-0.5 * (d[p]^2))
@@ -101,7 +114,11 @@ par_2_param <- function(par, P, R) {
 
     # Build orthonormal basis.
     B <- qr.Q(qr(cbind(L, matrix(rnorm((P-R)*P), nrow = P))))
-    U <- B[,1:R, drop = FALSE]
+    if (R > 0) {
+        U <- B[,1:R, drop = FALSE]
+    } else {
+        U <- numeric(0)
+    }
     if (R < P) {
         Vs <- lapply((R+1):P, function(p) B[,p, drop = FALSE])
     } else {
@@ -130,7 +147,11 @@ nll_wrapper <- function(par, y, X, R, has_tail) {
     #TODO: Better init
     set.seed(123)
     B <- qr.Q(qr(cbind(L, matrix(rnorm((P-R)*P), nrow = P))))
-    U <- B[,1:R, drop = FALSE]
+    if (R > 0) {
+        U <- B[,1:R, drop = FALSE]
+    } else {
+        U <- numeric(0)
+    }
     if (R < P) {
         Vs <- lapply((R+1):P, function(p) B[,p, drop = FALSE])
     } else {
@@ -158,10 +179,19 @@ gp_mf <- function(y, X, R, has_tail = TRUE, lower_val = 1e-4, smart_init = TRUE,
     N <- nrow(X)
     P <- ncol(X)
 
+    # Some error catching
+    if (R == 0 && !has_tail) {
+        stop("Asking for no tail and a 0D active subspace yields an empty kernel.")
+    }
+
     # Initialize 
     if (smart_init) {
         l_init <- rep(mean(dist(X)^2), P)
-        u_init <- as.numeric(dr(y ~ X, method = 'phdy')$raw.evectors[,1:R])
+        if (R > 0) {
+            u_init <- as.numeric(dr(y ~ X, method = 'phdy')$raw.evectors[,1:R])
+        } else {
+            u_init <- numeric(0)
+        }
         init <- c(u_init, l_init)
         if (has_tail) {
             #gamma_init <- abs(rnorm(P-R+1,0,1e0))
@@ -230,8 +260,3 @@ print.act_gp <- function(agp) {
     cat("Lengthscale Parameters:", agp$l, '\n')
     cat(rep('-', as.integer(Sys.getenv("COLUMNS"))-1), '\n', sep = '')
 }
-
-par <- c(-161.0944747, 27287.4147922, 377.8761756, -589.5290406, -1723.1319990,
- 0.0001000, 0.8071448, 0.8071448, 0.8071448, 0.8071448,
- -0.6953310)
-
